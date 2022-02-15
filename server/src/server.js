@@ -12,11 +12,11 @@ let publisher = null;
 
 bus.on("update", (data) => {
     subscribers.forEach((sub) => {
-        sub.send(data);
+        sub.send(data, { binary: false });
     })
 });
 bus.on("command", (cmd) => {
-    publisher.send(cmd);
+    publisher.send(cmd, { binary: false });
 });
 
 ws.on("connection", (socket, req) => {
