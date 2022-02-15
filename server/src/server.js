@@ -1,7 +1,10 @@
 const { EventEmitter } = require("events");
-const { WebSocketServer } = require("ws");
+const { Server } = require("ws");
+const express = require("express")
+const server = express()
+    .listen(process.env.PORT || 3000, () => console.log(`Listening on ${process.env.PORT || 3000}`));
 
-const ws = new WebSocketServer({ port: 3000 });
+const ws = new Server({ server });
 const bus = new EventEmitter();
 
 const subscribers = [];
