@@ -6,14 +6,121 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="manifest" href="./manifest.json">
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    </style>
     <title>Document</title>
+    <style>
+        #rows {
+            margin-top: 10%;
+        }
+
+        @media screen and (max-width:600px) {
+            #rows {
+                margin-top: 40%;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <h1>hello</h1>
+    <div class="container" dir="rtl">
+        <div id="rows">
+            <div class="row row-cols-2">
+                <div class="col-md-6 col-12">
+                    <canvas id="tempChart"></canvas>
+                </div>
+                <div class="col-md-6 col-12">
+                    <canvas id="GasChart"></canvas>
+                </div>
+            </div>
+            <div class="row justify-content-center mt-5">
+                <div class="col-6 d-flex justify-content-center">
+                    <button class="btn btn-success mx-1" onclick="getReads(this)">Get Gas</button>
+                </div>
+            </div>
+            <div class="col-md-6 col-12">
+            </div>
+        </div>
+    </div>
 </body>
+<script src="assets/js/chartjs/dist/chart.min.js"></script>
 <script src="./main.js"></script>
 <script>
     swInit();
 </script>
+<script>
+
+    let tempChart = createChart("tempChart", [], "temperature Chart");
+    let GasChart = createChart("GasChart", [], "gas Chart");
+
+    let CurrentState = "temperature";
+    // const ws = new WebSocket("ws://localhost:3000/client","json")
+    const ws = new WebSocket("ws://esp32-ws.herokuapp.com/client")
+    ws.onopen = () => {
+        let data = true;
+        console.log("[CONNECTED]");
+        ws.send(CurrentState);
+        console.log(`[SENT]: ${CurrentState}`);
+    }
+    ws.onclose = () => {
+        console.log("[DISCONNECTED]");
+    }
+    ws.onmessage = (msg) => {
+        console.log(`[RECIEVED]: ${ msg.data }`);
+        if(CurrentState === "temperature") {
+            updateChart(tempChart, msg.data, 1);
+        }else if(CurrentState === "gas") {
+            updateChart(GasChart,msg.data,1);
+        }
+    }
+    function getReads(button) {
+        if (CurrentState === "temperature") {
+            CurrentState = "gas";
+            button.textContent = "Get Temperature";
+        } else {
+            CurrentState = "temperature";
+            button.textContent = "Get Gas";
+        }
+        ws.send(CurrentState);
+    }
+
+    function createChart(chartId, yData, title) {
+        const xAxis = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+        const ctx = document.getElementById(chartId).getContext('2d');
+        const data = {
+            labels: xAxis,
+            datasets: [{
+                label: title,
+                data: yData,
+                fill: false,
+                borderColor: 'rgb(75, 192, 192)',
+                tension: 0.1
+            }],
+            options: {
+                aspectRatio: 0.5
+            }
+        };
+        const myChart = new Chart(ctx, {
+            type: 'line',
+            data: data,
+        });
+        return myChart;
+    }
+    function updateChart(chart, new_y_data, x_res) {
+        if (chart.data.labels.length === chart.data.datasets[0].data.length) {
+            chart.data.labels.shift();
+            chart.data.datasets[0].data.shift();
+            chart.data.labels.push(chart.data.labels[chart.data.labels.length - 1] + x_res);
+        }
+        chart.data.datasets[0].data.push(new_y_data);
+        chart.update();
+    }
+    // setInterval(() => {
+    //     // update temp
+    //     // updateChart(tempChart, temp++, 1);
+    //     // // update gas
+    //     // updateChart(GasChart,gas++,1);
+    // }, 1000);
+</script>
+
 </html>
