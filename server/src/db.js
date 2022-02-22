@@ -8,7 +8,7 @@ db.select = select;
 async function init() {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
-            db.run("CREATE TABLE reading (time TEXT, value FLOAT, type TEXT, unit TEXT)", (err, res) => {
+            db.run("CREATE TABLE reading (readingNumber TEXT, value FLOAT, type TEXT, unit TEXT)", (err, res) => {
                 err ? reject(err) : resolve(res);
             });
         });
@@ -17,7 +17,7 @@ async function init() {
 
 async function insert(readings) {
     let sql = "INSERT INTO reading VALUES ";
-    let res = readings.reduce((prev, cur) => prev + "(" + `'${cur.timestamp}'` + "," + `'${cur.value}'` + "," + `'${cur.type}'` + "," + `'${cur.unit}'` + "),", "")
+    let res = readings.reduce((prev, cur) => prev + "(" + `'${cur.readingNumber}'` + "," + `'${cur.value}'` + "," + `'${cur.type}'` + "," + `'${cur.unit}'` + "),", "")
     res = res.substring(0, res.length - 1)
     return new Promise((resolve, reject) => {
         db.serialize(() => {
