@@ -13,6 +13,9 @@ WebSocketsClient webSocket;
 
 unsigned long messageInterval = 1000;
 bool connected = false;
+
+// 1 temperature
+// 0 gas
 int mode = -1; 
 
 DHT dht(DHTPIN, DHTTYPE);
