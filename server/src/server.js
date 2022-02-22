@@ -16,7 +16,9 @@ bus.on("update", (data) => {
     })
 });
 bus.on("command", (cmd) => {
-    publisher.send(cmd, { binary: false });
+    if (publisher) {
+        publisher.send(cmd, { binary: false });
+    }
 });
 
 ws.on("connection", (socket, req) => {
