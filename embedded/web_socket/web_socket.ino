@@ -1,22 +1,19 @@
 
 #include <Arduino.h>
 #include <string.h>
-
+#include "DHT.h"
 #include <ESP8266WiFi.h>
 #include <WebSocketsClient.h>
  
-WebSocketsClient webSocket;
- 
+#define DHTPIN D1
+#define DHTTYPE DHT11
+#define MQ2pin (A0)
 
+WebSocketsClient webSocket;
 
 unsigned long messageInterval = 1000;
 bool connected = false;
-#define MQ2pin (A0)
-  
 int mode = -1; 
-#include "DHT.h"
-#define DHTPIN D1
-#define DHTTYPE DHT11
 
 DHT dht(DHTPIN, DHTTYPE);
 
@@ -37,34 +34,32 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
  
 }
 
-void connect_wifi() {
-    Serial.println("Please enter the username: ");
-    while(Serial.available()==0)
-    {}
-    String ssid =Serial.readString();
-    char str_array[ssid.length()];
-    ssid.toCharArray(str_array, ssid.length());
-    char* username = strtok(str_array, " ");
+void serial_tochar(char * out) {
+    while(Serial.available()==0) { }
+    String str =Serial.readString();
+    char char_array[str.length()];
+    str.toCharArray(char_array, str.length());
+    out = strtok(char_array, " ");
+}
 
+void connect_wifi() {
+    char * username;
+    Serial.println("Please enter the username: ");
+    serial_tochar(username);
+
+    char * password;
     Serial.println("Please enter the password: ");
-    while(Serial.available()==0)
-    {}
-    String password_string =Serial.readString();
-    char str_array2[password_string.length()];
-    password_string.toCharArray(str_array2, password_string.length());
-    char* password = strtok(str_array2, " ");
-    
+    serial_tochar(password);
+
     WiFi.begin(username, password);
 
-    int i=0;
-    while( WiFi.status() != WL_CONNECTED ) {
+    uint8_t i = 0;
+    while(WiFi.status() != WL_CONNECTED && i < 20) {
+      delay(500);
+      Serial.print( "." );
       i++;
-      delay ( 500 );
-      if (i>20) break;
-      Serial.print ( "." );
     }
-       if (i<20) break;
-    }
+    return WiFi.status() == WL_CONNECTED;
 }
 
 void print_networks() {
@@ -104,10 +99,10 @@ void setup() {
         Serial.flush();
         delay(1000);
     }
-    while(1)
+    while(!connected)
     {
         print_networks();
-        connect_wifi();
+        connected = connect_wifi();
     }
     Serial.print("Local IP: "); Serial.println(WiFi.localIP());
     // server address, port and URL
