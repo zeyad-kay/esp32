@@ -13,7 +13,7 @@ unsigned long messageInterval = 1000;
 bool connected = false;
 #define MQ2pin (A0)
   
-int temp_gas_toggle=-1; 
+int mode = -1; 
 #include "DHT.h"
 #define DHTPIN D1
 #define DHTTYPE DHT11
@@ -120,16 +120,13 @@ void setup() {
 unsigned long lastUpdate = millis();
 
 void loop() {
-    
     webSocket.loop();
     if (connected && lastUpdate+messageInterval<millis()){
-        if (temp_gas_toggle==1)
+        if (mode == 1)
         {
             send_gas();
         }  
-        else if (temp_gas_toggle == -1)
-        {}
-        else
+        else if(mode == 0)
         {
             send_temperature();
         }
