@@ -124,14 +124,14 @@
         chart.update();
     }
     function downloadData(type) {
-        fetch(`http://localhost:3000/getReadings?type=${type}`,{headers : {
+        fetch(`https://esp32-ws.herokuapp.com/getReadings?type=${type}`,{headers : {
             "Access-Control-Allow-Origin" : "*"
         }})
         .then(response => response.json())
         .then(data => {
-            let tempHeader = ["time", "temperature", "unit"];
-            let gasHeader = ["time", "gas", "unit"];
-            let finalData = data.map(obj => [String(obj["time"]), String(obj["value"]), String(obj["unit"])]);
+            let tempHeader = ["reading Number", "temperature", "unit"];
+            let gasHeader = ["reading Number", "gas", "unit"];
+            let finalData = data.map(obj => [String(obj["readingNumber"]), String(obj["value"]), String(obj["unit"])]);
             if (type === "temperature") {
                 finalData.unshift(tempHeader);
             } else {
@@ -142,7 +142,6 @@
             var encodedUri = encodeURI(csvContent);
             window.open(encodedUri);
         });
-        // console.log(csvContent);
     }
 </script>
 

@@ -22,19 +22,18 @@ const bus = new EventEmitter();
 const subscribers = [];
 let type ;
 let publisher = null;
-let tempTime = 1;
-let gasTime = 1;
+let tempReadingNumber = 1;
+let gasReadingNumber = 1;
 bus.on("update", async (data) => {
-    console.log("test");
     subscribers.forEach((sub) => {
         sub.send(data, { binary: false });
     })
     if(type === "temperature") {
-        await db.insert([{timestamp : tempTime,value : data,type : type,unit : "C"}]);
-        tempTime++;
+        await db.insert([{readingNumber : tempReadingNumber,value : data,type : type,unit : "C"}]);
+        tempReadingNumber++;
     }else {
-        await db.insert([{timestamp : gasTime,value : data,type : type,unit : "M^3"}]);
-        gasTime++;
+        await db.insert([{readingNumber : gasReadingNumber,value : data,type : type,unit : "PPM"}]);
+        gasReadingNumber++;
     } 
 });
 bus.on("command", (cmd) => {
