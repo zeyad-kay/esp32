@@ -67,8 +67,7 @@ void connect_wifi() {
     }
 }
 
-void print_networks()
-{
+void print_networks() {
     int networks_number = WiFi.scanNetworks();
     for(int i=0;i<networks_number;i++) 
     {
@@ -80,6 +79,24 @@ void print_networks()
     }
 }
 
+void send_temperature() {
+    int temp = dht.readTemperature();
+    char tempc[5];
+    itoa(temp, tempc,10);
+    Serial.print(temp);
+    String b = "{temperature: 123}";
+    webSocket.sendTXT(tempc);
+}
+
+void send_gas() {
+    int gas = analogRead(MQ2pin);
+    char gasc[5];
+    itoa(gas, gasc,10);
+    Serial.print(gas);
+    //String a = "{gas: 456}";
+    webSocket.sendTXT( gasc);
+}
+
 void setup() {
     Serial.begin(115200); 
     for(uint8_t t = 4; t > 0; t--) {
@@ -89,8 +106,8 @@ void setup() {
     }
     while(1)
     {
-    print_networks();
-    connect_wifi();
+        print_networks();
+        connect_wifi();
     }
     Serial.print("Local IP: "); Serial.println(WiFi.localIP());
     // server address, port and URL
@@ -108,24 +125,13 @@ void loop() {
     if (connected && lastUpdate+messageInterval<millis()){
         if (temp_gas_toggle==1)
         {
-        int gas = analogRead(MQ2pin);
-        char gasc[5];
-        itoa(gas, gasc,10);
-        Serial.print(gas);
-        //String a = "{gas: 456}";
-        webSocket.sendTXT( gasc);
+            send_gas();
         }  
         else if (temp_gas_toggle == -1)
         {}
         else
         {
-        int temp = dht.readTemperature();
-        char tempc[5];
-        itoa(temp, tempc,10);
-
-        Serial.print(temp);
-        String b = "{temperature: 123}";
-        webSocket.sendTXT(tempc);
+            send_temperature();
         }
         lastUpdate = millis();
     }
