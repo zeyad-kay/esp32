@@ -28,10 +28,10 @@ async function insert(readings) {
     });
 }
 
-async function select() {
+async function select(type) {
     return new Promise((resolve, reject) => {
         db.serialize(() => {
-            db.all("SELECT * FROM reading", (err, res) => {
+            db.all(`SELECT * FROM reading WHERE type = '${type}'`, (err, res) => {
                 err ? reject(err) : resolve(res);
             });
         });
