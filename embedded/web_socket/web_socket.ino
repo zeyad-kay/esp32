@@ -23,10 +23,10 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
             break;
         case WStype_TEXT:
             if(!strcmp((char *)payload,"temperature")) 
-            temp_gas_toggle = 0;
+            mode = 0;
 
             if(!strcmp((char *)payload,"gas")) 
-            temp_gas_toggle =1;
+            mode = 1;
         break; 
         case WStype_BIN:
              hexdump(payload, length);
