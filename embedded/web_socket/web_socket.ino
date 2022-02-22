@@ -36,33 +36,31 @@ void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     }
  
 }
-
-void serial_tochar(char * out) {
+char char_array_user[255];
+char char_array_pass[255];
+char *data[]={char_array_user,char_array_pass};
+char* serial_tochar(int choose_data) {
     while(Serial.available()==0) { }
     String str =Serial.readString();
-    char char_array[str.length()];
-    str.toCharArray(char_array, str.length());
-    out = strtok(char_array, " ");
+    str.toCharArray(data[choose_data], str.length());
+    return data[choose_data];
 }
 
 void connect_wifi() {
     char * username;
     Serial.println("Please enter the username: ");
-    serial_tochar(username);
-
+    username = strtok(serial_tochar(0), " ");
     char * password;
     Serial.println("Please enter the password: ");
-    serial_tochar(password);
-
+    password = strtok(serial_tochar(1), " ");
     WiFi.begin(username, password);
 
     uint8_t i = 0;
     while(WiFi.status() != WL_CONNECTED && i < 20) {
+      Serial.print(".");
       delay(500);
-      Serial.print( "." );
       i++;
     }
-    return WiFi.status() == WL_CONNECTED;
 }
 
 void print_networks() {
@@ -81,8 +79,7 @@ void send_temperature() {
     int temp = dht.readTemperature();
     char tempc[5];
     itoa(temp, tempc,10);
-    Serial.print(temp);
-    String b = "{temperature: 123}";
+    Serial.print(tempc);
     webSocket.sendTXT(tempc);
 }
 
@@ -91,7 +88,7 @@ void send_gas() {
     char gasc[5];
     itoa(gas, gasc,10);
     Serial.print(gas);
-    //String a = "{gas: 456}";
+
     webSocket.sendTXT( gasc);
 }
 
@@ -102,10 +99,10 @@ void setup() {
         Serial.flush();
         delay(1000);
     }
-    while(!connected)
+    while(WiFi.status() !=  WL_CONNECTED )
     {
         print_networks();
-        connected = connect_wifi();
+        connect_wifi();
     }
     Serial.print("Local IP: "); Serial.println(WiFi.localIP());
     // server address, port and URL
@@ -119,7 +116,7 @@ unsigned long lastUpdate = millis();
 
 void loop() {
     webSocket.loop();
-    if (connected && lastUpdate+messageInterval<millis()){
+    if (lastUpdate+messageInterval<millis()){
         if (mode == 1)
         {
             send_gas();
