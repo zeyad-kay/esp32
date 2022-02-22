@@ -7,16 +7,13 @@
  
 WebSocketsClient webSocket;
  
-const char *ssid     = "Etisalat-5CY7";
-const char *password = "20061998";
- 
-unsigned long messageInterval = 5000;
+
+
+unsigned long messageInterval = 1000;
 bool connected = false;
 #define MQ2pin (A0)
   
-int flag=-1; 
-#define DEBUG_SERIAL Serial
-
+int temp_gas_toggle=-1; 
 #include "DHT.h"
 #define DHTPIN D1
 #define DHTTYPE DHT11
@@ -26,61 +23,65 @@ DHT dht(DHTPIN, DHTTYPE);
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     switch(type) {
-        case WStype_DISCONNECTED:
-            DEBUG_SERIAL.printf("Disconnected!\n");
-            connected = false;
-            break;
-        case WStype_CONNECTED: {
-            connected = true;
-            DEBUG_SERIAL.println("Connected");
-        }
             break;
         case WStype_TEXT:
-        DEBUG_SERIAL.printf("[WSc] text RESPONSE: %s\n", payload);
             if(!strcmp((char *)payload,"temperature")) 
-            flag = 0;
+            temp_gas_toggle = 0;
 
             if(!strcmp((char *)payload,"gas")) 
-            flag =1;
+            temp_gas_toggle =1;
         break; 
         case WStype_BIN:
-            DEBUG_SERIAL.printf("[WSc] get binary length: %u\n", length);
              hexdump(payload, length);
-            break;
-                case WStype_PING:
-                        // pong will be send automatically
-                        DEBUG_SERIAL.printf("[WSc] get ping\n");
-                        break;
-                case WStype_PONG:
-                        // answer to a ping we send
-                        DEBUG_SERIAL.printf("[WSc] get pong\n");
-                        break;
     }
  
 }
 
 void setup() {
-    DEBUG_SERIAL.begin(115200);
- 
-//  DEBUG_SERIAL.setDebugOutput(true);
- 
-    DEBUG_SERIAL.println();
-    DEBUG_SERIAL.println();
-    DEBUG_SERIAL.println();
- 
+    Serial.begin(115200); 
     for(uint8_t t = 4; t > 0; t--) {
-        DEBUG_SERIAL.printf("[SETUP] BOOT WAIT %d...\n", t);
-        DEBUG_SERIAL.flush();
+        Serial.printf("Pease wait for %d seconds\n", t);
+        Serial.flush();
         delay(1000);
     }
- 
-    WiFi.begin(ssid, password);
- 
+    while(1)
+    {
+     int networks_number = WiFi.scanNetworks();
+    for(int counter1=0;counter1<networks_number;counter1++) 
+    {
+      Serial.println(WiFi.SSID(counter1));
+      Serial.println(WiFi.RSSI(counter1));
+    }
+    Serial.println("Please enter the username: ");
+    while(Serial.available()==0)
+    {}
+    String ssid =Serial.readString();
+    char str_array[ssid.length()];
+    ssid.toCharArray(str_array, ssid.length());
+    char* username = strtok(str_array, " ");
+
+    Serial.println("Please enter the password: ");
+    while(Serial.available()==0)
+    {}
+    String password_string =Serial.readString();
+    char str_array2[password_string.length()];
+    password_string.toCharArray(str_array2, password_string.length());
+    char* password = strtok(str_array2, " ");
+
+    
+    WiFi.begin(username, password); 
+    int counter2=0;
     while ( WiFi.status() != WL_CONNECTED ) {
+      counter2++;
       delay ( 500 );
+      if (counter2>20)
+      { break;}
       Serial.print ( "." );
+    }
+       if (counter2<20)
+      { break;}
     }        
-    DEBUG_SERIAL.print("Local IP: "); DEBUG_SERIAL.println(WiFi.localIP());
+    Serial.print("Local IP: "); Serial.println(WiFi.localIP());
     // server address, port and URL
     webSocket.begin("esp32-ws.herokuapp.com", 80, "/sensor","text");
  
@@ -94,23 +95,23 @@ void loop() {
     
     webSocket.loop();
     if (connected && lastUpdate+messageInterval<millis()){
-        if (flag==1)
+        if (temp_gas_toggle==1)
         {
         int gas = analogRead(MQ2pin);
         char gasc[5];
         itoa(gas, gasc,10);
-        Serial.print("gas");
+        Serial.print(gas);
         //String a = "{gas: 456}";
         webSocket.sendTXT( gasc);
         }  
-        else if (flag == -1)
+        else if (temp_gas_toggle == -1)
         {}
         else
         {
-        float temp = dht.readTemperature();
+        int temp = dht.readTemperature();
         char tempc[5];
         itoa(temp, tempc,10);
-        Serial.print("gas");
+
         Serial.print(temp);
         String b = "{temperature: 123}";
         webSocket.sendTXT(tempc);
