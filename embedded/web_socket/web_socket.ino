@@ -20,16 +20,16 @@ DHT dht(DHTPIN, DHTTYPE);
 
 void webSocketEvent(WStype_t type, uint8_t * payload, size_t length) {
     switch(type) {
-            break;
         case WStype_TEXT:
             if(!strcmp((char *)payload,"temperature")) 
             mode = 0;
 
             if(!strcmp((char *)payload,"gas")) 
             mode = 1;
-        break; 
+            break; 
         case WStype_BIN:
-             hexdump(payload, length);
+            hexdump(payload, length);
+            break;
     }
  
 }
